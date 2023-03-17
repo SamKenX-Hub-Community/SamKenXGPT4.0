@@ -140,6 +140,9 @@ class AsyncOpenAIAPI(Backend):
         thread = threading.Thread(target=self.gen_title_thread, args=(conversation,))
         thread.start()
 
+    def get_backend_name(self):
+        return "chatgpt-api"
+
     def set_available_models(self):
         self.available_models = constants.OPENAPI_CHAT_RENDER_MODELS
 
@@ -416,7 +419,12 @@ class OpenAIAPI:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{__name}'")
 
     def async_run(self, awaitable):
-        return asyncio.get_event_loop().run_until_complete(awaitable)
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            future = asyncio.ensure_future(awaitable)
+            return future.result()
+        else:
+            return loop.run_until_complete(awaitable)
 
     def ask_stream(self, prompt, title=None):
         def iter_over_async(ait):

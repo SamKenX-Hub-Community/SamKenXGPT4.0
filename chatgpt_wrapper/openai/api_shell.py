@@ -27,7 +27,7 @@ class ApiShell(GPTShell):
         self.logged_in_user = None
 
     def not_logged_in_disallowed_commands(self):
-        base_shell_commands = self._introspect_commands(GPTShell)
+        base_shell_commands = self.introspect_commands(GPTShell)
         disallowed_commands = [c for c in base_shell_commands if c not in ALLOWED_BASE_SHELL_NOT_LOGGED_IN_COMMANDS]
         return disallowed_commands
 
@@ -35,8 +35,8 @@ class ApiShell(GPTShell):
         if not self.logged_in_user and command in self.not_logged_in_disallowed_commands():
             return False, None, "Must be logged in to execute %s%s" % (constants.COMMAND_LEADER, command)
 
-    def configure_commands(self):
-        self.commands = self._introspect_commands(__class__)
+    def configure_shell_commands(self):
+        self.commands = self.introspect_commands(__class__)
 
     def get_custom_shell_completions(self):
         user_commands = [
@@ -77,10 +77,9 @@ class ApiShell(GPTShell):
         database.create_schema()
         self.user_management = UserManager(self.config)
         self.session = self.user_management.orm.session
-        await self.check_login()
 
     async def launch_backend(self):
-        pass
+        await self.check_login()
 
     def get_user(self, user_id):
         user = self.session.get(User, user_id)
